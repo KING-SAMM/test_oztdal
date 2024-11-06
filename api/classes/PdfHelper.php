@@ -7,13 +7,13 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'auto
 use setasign\Fpdi\Tcpdf\Fpdi;
 
 class PdfHelper {
-    public static function createLetterHeadedFile($groupId, $groupName, $letterHeadFile, $members, $profilePic) {
+    public static function createLetterHeadedFile($communityId, $communityName, $letterHeadFile, $reps, $profilePic) {
         $uploadDir = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'documents' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0777, true); // Create directory if it doesn't exist
         }
 
-        $letterHeadFilePath = $uploadDir . 'letterhead_community_' . $groupId . '.pdf';
+        $letterHeadFilePath = $uploadDir . 'letterhead_community_' . $communityId . '.pdf';
 
         // Copy the uploaded letterhead template to the destination
         move_uploaded_file($letterHeadFile['tmp_name'], $letterHeadFilePath);  // JUST ADDED
@@ -36,25 +36,26 @@ class PdfHelper {
         $pdf->SetFont('helvetica', '', 14);
         
         // Add the group name at the top
-        $pdf->Cell(0, 10, "$groupName Community Representatives", 0, 1, 'C');
+        $pdf->Cell(0, 10, "$communityName Community Representatives", 0, 1, 'C');
 
-        // Loop through each member and add their details on a new line
-        foreach ($members as $index => $member) {
-            $name = $member['name'];
-            $email = $member['email'];
+        // Loop through each represenatative and add their details on a new line
+        foreach ($reps as $index => $rep) {
+            $firstname = $rep['firstname'];
+            $lastname = $rep['lastname'];
+            $phone = $rep['phone'];
     
-            // $profilePic = $member['profile_pic'];
+            // $profilePic = $rep['profile_pic'];
             // $profilePic = $profilePic;
 
-            // Add member's name and email
-            $pdf->Cell(0, 10, ($index + 1) . ".  Name: $name, Email: $email", 0, 0);
+            // Add representative's names and phone number
+            $pdf->Cell(0, 10, ($index + 1) . ".  Name: $firstname $lastname, Phone: $phone", 0, 0);
 
             // Check if the profile picture exists and is valid, then add it next to the text
             if (file_exists($profilePic['tmp_name'])) {
                 $pdf->Image($profilePic['tmp_name'], 160, $pdf->GetY() - 10, 20, 20, '', '', '', true, 300, '', false, false, 1, false, false, false);
             }
 
-            // Move to the next line below the current member's details
+            // Move to the next line below the current representative's details
             $pdf->Ln(20);
         }
 

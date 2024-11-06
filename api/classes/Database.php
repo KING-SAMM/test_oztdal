@@ -2,7 +2,7 @@
 
 class Database {
     private $host = 'localhost';
-    private $db_name = 'test_oztdal_db';
+    private $db_name = 'oztdalco_oztdal';
     private $username = 'root';
     private $password = '';
     private $conn;

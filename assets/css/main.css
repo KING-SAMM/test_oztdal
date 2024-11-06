@@ -1,0 +1,191 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    /*background-color: #CCC;*/
+    margin: 0;
+    height: 100vh;
+    background-image: url('../img/register_bg.jpg'); /* Add your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    filter: grayscale(100%); /* Make the image black-and-white */
+    color: #FFF;
+    /*box-sizing: border-box;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.7); /* Dark overlay for contrast */
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+ header {
+    text-align: center;
+    padding: 20px 0;
+    padding-top: 40px;
+}
+
+.main form {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px 0;
+    padding: 30px;
+    background: rgb(255, 255, 255); 
+    background: rgba(255, 255, 255, 0.1); 
+    border-radius: 8px;
+    backdrop-filter: blur(30px); /* Apply blur to the background */
+    -webkit-backdrop-filter: blur(30px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Light border for definition */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.main form .form-title {
+    text-align: center;
+    font-size: 23px;
+    opacity: 0.6;
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+
+.main form fieldset {
+    padding: 10px 10px;
+}
+
+.main form legend {
+    font-style: italic;
+    font-weight: 800;
+}
+
+.main form label {
+    width: 100%;
+}
+
+.main form input[type="text"],
+.main form input[type="email"],
+.main form input[type="tel"],
+.main form #local_govt_id,
+.main form #constituency_id {
+    /*display: block;*/
+    padding: 10px 10px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    width: 100%;
+    /*border: none;*/
+    font-size: 17px;
+    color: #FFF;
+    background-color: rgb(238, 238, 238);
+    background-color: rgba(238, 238, 238, 0.3);
+    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+    -webkit-appearance: none; /* Remove default arrow in Chrome */
+    -moz-appearance: none; /* Remove default arrow in Firefox */
+    appearance: none; /* Remove default arrow in other browsers */
+}
+
+.main form input[type="text"]:hover, 
+.main form input[type="email"]:hover,
+.main form input[type="tel"]:hover,
+.main form #local_govt_id:hover,
+.main form #constituency_id:hover {
+    background-color: rgb(210, 210, 210);
+    background-color: rgba(210, 210, 210, 0.3);
+}
+
+.main form input[type="text"]::placeholder, 
+.main form input[type="email"]::placeholder,
+.main form input[type="tel"]::placeholder {
+    font-size: 17px;
+    color: rgb(210, 210, 210);
+}
+
+.main form #local_govt_id,
+.main form #constituency_id {
+    margin-bottom: 20px;
+}
+
+.main form #local_govt_id option,
+.main form #constituency_id option {
+    padding: 15px 10px;
+    border-radius: 4px;
+    width: 100%;
+    font-size: 17px;
+    color: rgb(45, 45, 45);
+    color: rgba(45, 45, 45, 0.8);
+    background-color: rgb(245, 245, 245);
+    background-color: rgba(245, 245, 245, 0.3);
+    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+    -webkit-appearance: none; /* Remove default arrow in Chrome */
+    -moz-appearance: none; /* Remove default arrow in Firefox */
+    appearance: none; 
+}
+
+.main form input[type="file"], .main form input[type="radio"] {
+    margin-top: 10px;
+}
+
+.main form .reps-section {
+   margin: 10px 10px; 
+   text-align: center;
+   opacity: 0.6;
+}
+
+.main form .profile_pic {
+    display: flex;
+    flex-direction: column;
+}
+
+@media screen and (min-width: 640px) {
+    .main form .profile_pic {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.main form .profile_pic .preview {
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ddd;
+    margin-top: 10px;
+    object-fit: cover;
+}
+
+.main form button[type="submit"],
+.main form button[type="button"] {
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: 800;
+    background-color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.3);
+    border: none;
+    border-radius: 5px;
+    color: rgb(255, 255, 255);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+form button:hover {
+    background-color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.5);
+}
