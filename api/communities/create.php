@@ -1,4 +1,8 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header("Content-Type: application/json; charset=UTF-8");
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Access-Control-Allow-Headers, Content-Type, Access-Control-Allow-Methods, Authorization, X-Requested-With');
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . 'Database.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . 'models' . DIRECTORY_SEPARATOR . 'Community.php';
@@ -6,11 +10,14 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'class
 require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . 'PdfHelper.php';
 require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'classes' . DIRECTORY_SEPARATOR . 'MailHandler.php';
 
-// Set headers
-header("Content-Type: application/json; charset=UTF-8");
-
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $db = (new Database())->connect();
+    if($db === null) 
+    {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Connection error...']);
+        exit();
+    }
     $community = new Community($db);
     $communityRep = new CommunityRep($db);
 
@@ -26,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Validate letter head PDF
     if ($letterHeadFile['type'] !== 'application/pdf') {
+        http_response_code(400);
         echo json_encode(['status' => 'error', 'message' => 'Invalid letterhead file format. Only PDF is allowed.']);
         exit;
     }
@@ -33,6 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Create a community entry in the database
     $communityId = $community->createCommunity($communityName, $communityEze, $localGovtId, $constituencyId, $lgCommHeadEmail, $lgCommHeadPhone, $lgCommSecPhone, $letterHeadFile);
     if (!$communityId) {
+        http_response_code(500);
         echo json_encode(['status' => 'error', 'message' => 'Failed to create community.']);
         exit;
     }
@@ -57,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Validate and process the profile picture
         if (!in_array($profilePicType, ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'])) {
+            http_response_code(400);
             echo json_encode(['status' => 'error', 'message' => "Invalid profile picture format for representative $firstname."]);
             exit;
         }
@@ -64,12 +74,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Add each rep's data to the database
         $repId = $communityRep->addRep($communityId, $gender, $firstname, $lastname, $phone, $profilePic);
         if (!$repId) {
+            http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => "Failed to add representative $firstname to the community."]);
             exit;
         }
     }
 
-    $letterHeadFilePath = PdfHelper::createLetterHeadedFile($communityId, $communityName, $letterHeadFile, $_POST['reps'], $profilePic);
+    $letterHeadFilePath = PdfHelper::createLetterHeadedFile($communityId, $communityName, $communityEze, $lgCommHeadEmail, $lgCommHeadPhone, $lgCommSecPhone, $letterHeadFile, $_POST['reps'], $profilePic);
 
     if($communityId && $letterHeadFilePath) {
         try {
@@ -77,16 +88,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $community->storeLetterHeadFilePath($letterHeadFilePath, $communityId);
             
             // Send an email to the first representative in the list as a sample (or use a specific email for notifications)
-            // MailHandler::sendEmail($_POST['reps'][0]['email'], $letterHeadPath);
-            // MailHandler::sendEmail("kcsamm11@gmail.com", $letterHeadFilePath);
+            $result = MailHandler::sendEmail('kcsamm11@gmail.com', $communityName, $letterHeadFilePath);
+            if(!$result['error'])
+            {
+                http_response_code(201);
+                echo json_encode([
+                    ["status" => "success", "message" => "Form details has been forwarded"],
+                    ["status" => "success", "message" => "Community and representatives added successfully!"]
+                ]);
+            }
+            else
+            {
+                http_response_code(500);
+                echo json_encode(['status' => 'error', 'message' => $result['error']]);
+            }
         } catch (Exception $e) {
+            http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
-        
     }
-
-    echo json_encode(['status' => 'success', 'message' => 'Community and representatives added successfully!']);
 } else {
+    http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Invalid request method.']);
 }
-?>
+

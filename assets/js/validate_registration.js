@@ -16,9 +16,8 @@ const lgCommSecPhoneErr = document.querySelector(".lg_comm_sec_phone_err");
 document.addEventListener("DOMContentLoaded", () => {
     // Loop through each representative's fieldset for dynamic validation
     function validateInputForNames(inputEl, errorErr) {
-        console.log(inputEl)
         const inputValue = inputEl.value?.trim();
-    console.log(inputValue)
+   
         if (inputValue === "") {
             errorErr.innerHTML = "This field is required";
             errorErr.style.color = "red";
@@ -45,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             error.style.color = "red";
             error.style.color = "rgba(210, 210, 210, 0.7)";
             error.classList.remove("valid");
-        } else if (!/^\+[0-9]{8,}$/.test(inputValue)) {
+        } else if (!/^\+[1-9]\d{0,3}[1-9]\d{6,14}$/.test(inputValue)) {
             error.innerHTML = "Invalid phone number format";
             error.style.color = "red";
             error.style.color = "rgba(210, 210, 210, 0.7)";
@@ -59,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 2; i++) {
         const firstname = document.getElementById(`firstname-${i}`);
         const firstnameErr = document.querySelector(`.firstname_err-${i}`);
         const lastname = document.getElementById(`lastname-${i}`);
