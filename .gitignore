@@ -2,6 +2,7 @@ tcpdf/
 setasign/
 tecnickcom/
 19-11-24/
+20-11-24/
 *.png
 *.pdf
 loop.php
@@ -10,6 +11,7 @@ loader.html
 loop.php
 payload.md
 prompt.md
+test.md
 test.html
 clear_session_and_form_data.php
 views/AbstractView.js
@@ -17,3 +19,5 @@ views/index.html
 views/register-refactor1.php
 views/register-refactor2.js
 views/register.try.js.php
+views/search_filter_old.php
+views/search_filter_test.php

@@ -1,0 +1,183 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.login_out {
+    display: flex;
+    flex-direction: column;
+    justify-content: right;
+    position: absolute;
+    top: 5px;
+    right: 20px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 1000;
+}
+.welcome {
+    display: inline-block;
+    font-size: 1em;
+    text-align: end;
+}
+
+.logout {
+    text-align: end;
+    display: inline-block;
+    color: rgba(77, 77, 77, 1.0);
+    text-decoration: none;
+}
+
+header {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+header h1 {
+    color: rgba(14, 5, 44, 0.9);
+    color: rgba(247, 134, 5, 0.7);
+}
+
+
+.main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5px;
+}
+
+@media (min-width: 768px) {
+    .main {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .main {
+        margin-left: 40px;
+        margin-right: 40px;
+    }
+}
+
+.main .formContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+.main .formContainer .filterForm {
+    display: inline-block;
+    width: 800px;
+    margin: 0 auto;
+    z-index: 1000;
+}
+
+.main .filterForm > #fetchAll {
+    cursor: pointer;
+}
+
+.formContainer #printButton {
+    display: block;
+    position: fixed;
+    top: 80px;
+    right: 40px;
+    background-color: transparent;
+    z-index: 1000;
+    cursor: pointer;
+}
+
+.main #resultsTable {
+    margin: 0 auto;
+}
+
+.main #resultsTable td {
+    margin: 0 50px;
+}
+
+/* #loader {
+    display: flex;
+    position: absolute;
+    top: 400px;
+    left: 50%;
+} */
+#loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(247, 134, 5, 0.7);
+    color: navy;
+    padding: 15px 0;
+    font-size: 18px;
+    border-radius: 50%;
+    z-index: 1000;
+}
+
+
+#loader span {
+    display: inline-block;
+}
+
+/* HTML: <div class="loader"></div> */
+.loader {
+    width: 50px;
+    aspect-ratio: 1;
+    display: grid;
+  }
+  .loader:before,
+  .loader:after {
+    content: "";
+    grid-area: 1/1;
+    border-radius: 50%;
+    background: #f03355;
+    -webkit-mask:repeating-linear-gradient(#000 0 5px,#0000 0 10px);
+    animation: l35 1.5s infinite;
+  }
+  .loader:after {
+    -webkit-mask:repeating-linear-gradient(#0000 0 5px,#000 0 10px);
+    --s:-1;
+  }
+  @keyframes l35 {
+    0%,
+    10% {transform: translate(0) rotate(0)}
+    35% {transform: translate(calc(var(--s,1)*50%)) rotate(0)}
+    66% {transform: translate(calc(var(--s,1)*50%)) rotate(calc(var(--s,1)*180deg))}
+    90%,
+    100% {transform: translate(0) rotate(calc(var(--s,1)*180deg))}
+  }
+
+
+  #loginForm {
+    max-width: 450px;
+    
+  }
+
+
+  #backToTop {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: none; /* Initially hidden */
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+#backToTop:hover {
+    background-color: #0056b3;
+}

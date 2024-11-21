@@ -5,6 +5,7 @@
 }
 
 body {
+    font-family: Arial, sans-serif;
     /*background-color: #CCC;*/
     margin: 0;
     height: 100vh;
@@ -281,7 +282,6 @@ header h1 {
 .loader {
     width: 60px;
     aspect-ratio: 1;
-    display: none;
     z-index:1000;
 }
 .loader:before,
@@ -305,3 +305,4 @@ header h1 {
     90%,
     100% {transform: translate(0) rotate(calc(var(--s,1)*180deg))}
 }
+

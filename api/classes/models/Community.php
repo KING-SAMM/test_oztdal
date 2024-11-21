@@ -38,4 +38,29 @@ class Community {
         $stmt->bindParam(':id', $communityId);
         $stmt->execute();
     }
+
+    // Search Functionality
+    public function searchCommunities($searchQuery) {
+        $query = "
+            SELECT * 
+            FROM communities 
+            WHERE community_name LIKE :searchQuery
+        ";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':searchQuery', '%' . $searchQuery . '%');
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }    
+
+    public function getById($id) {
+        $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return false; // Handle errors as needed
+    }
 }

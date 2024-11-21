@@ -17,4 +17,16 @@ class Constituency {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Returns an associative array of results
     }
+
+    public function getById($id) {
+        $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->db->connect()->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        if ($stmt->execute()) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+
+        return false; // Handle errors as needed
+    }
 }
