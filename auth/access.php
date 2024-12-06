@@ -1,3 +1,16 @@
+<?php
+session_start();
+// Check for logout request
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: http://testoztdal.local/auth/access.php');
+    exit;
+}
+
+// Determine whether the user is logged in
+$isLoggedIn = isset($_SESSION['user']);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -91,8 +104,31 @@
             text-decoration: underline;
         }
     </style>
+    <link rel="stylesheet" href="http://testoztdal.local/assets/css/nav.css" />
+    
 </head>
 <body>
+    <nav class="navbar" style="z-index:1000; position: absolute; top: 0; width:100vw;">
+        <div class="logo">
+            <img src="http://testoztdal.local/assets/img/oztdal_logo-trans.png" alt="Logo">
+        </div>
+        <ul class="nav-links">
+            <li><a href="http://testoztdal.local/">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="meetings.html">Meetings</a></li>
+            <li><a href="http://testoztdal.local/views/register.php">Registration & Membership</a></li>
+            <li><a href="events.html">Events</a></li>
+            <li><a href="payments.html">Payments & Dues</a></li>
+            <?php if (!$isLoggedIn): ?>
+                <li><a href="#"Contact</a></li>
+            <?php else: ?>
+                <div class="login_out">
+                    <p class="welcome">Welcome, <?= htmlspecialchars($_SESSION['user']); ?></p>
+                    <a class="logout" href="?logout=true" style="text-decoration:none;">Logout</a>
+                </div>
+            <?php endif; ?>
+        </ul>
+    </nav>
     <div class="login-container">
         <h1>Login</h1>
         <form id="loginForm">

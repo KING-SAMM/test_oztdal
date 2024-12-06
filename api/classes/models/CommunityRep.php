@@ -42,32 +42,68 @@ class CommunityRep {
                   FROM community_reps cr 
                   JOIN communities c ON cr.community_id = c.id 
                   JOIN local_govts lg ON c.local_govt_id = lg.id 
-                  JOIN constituencies con ON c.constituency_id = con.id";
+                  JOIN constituencies con ON c.constituency_id = con.id
+                  ORDER BY cr.firstname ASC";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getFilteredData($filterType, $order, $orderBy) {
-        $query = ""; // Build the query based on filterType
-        // Implement queries similar to previous examples based on $filterType
+    public function getFilteredData($orderBy, $order) {
+        // Whitelist of allowed column names and order directions
+        $allowedColumns = ['community_name', 'community_eze', 'firstname', 'created_at'];
+        $allowedOrder = ['ASC', 'DESC'];
+
+        if (!in_array($orderBy, $allowedColumns) || 
+            $orderBy === 'community_name' ||
+            $orderBy === 'community_eze') {
+            $orderBy = 'firstname'; // Default column
+        }
+        if (!in_array(strtoupper($order), $allowedOrder)) {
+            $order = 'ASC'; // Default order
+        }
+        
+        $query = "
+            SELECT 
+                cr.firstname, 
+                cr.lastname, 
+                c.community_name, 
+                lg.name AS local_govt, 
+                con.name AS constituency 
+            FROM 
+                community_reps cr 
+            JOIN 
+                communities c 
+            ON 
+                cr.community_id = c.id 
+            JOIN 
+                local_govts lg 
+            ON 
+                c.local_govt_id = lg.id 
+            JOIN 
+                constituencies con 
+            ON 
+                c.constituency_id = con.id
+            ORDER BY 
+                cr.{$orderBy} {$order}
+        ";
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getCommunityDetails($filterType, $order, $orderBy) {
-        // Validate input for order and orderBy to prevent SQL injection
-        $validOrder = ['ASC', 'DESC'];
-        $validOrderBy = ['firstname', 'lastname', 'phone', 'gender'];
+        // // Validate input for order and orderBy to prevent SQL injection
+        // $validOrder = ['ASC', 'DESC'];
+        // $validOrderBy = ['firstname', 'community_name', 'community_eze', 'created_at'];
     
-        // Default to ASC if $order is invalid
-        if (!in_array(strtoupper($order), $validOrder)) {
-            $order = 'ASC';
-        }
+        // // Default to ASC if $order is invalid
+        // if (!in_array(strtoupper($order), $validOrder)) {
+        //     $order = 'ASC';
+        // }
     
-        // Default to 'firstname' if $orderBy is invalid
-        if (!in_array($orderBy, $validOrderBy)) {
-            $orderBy = 'firstname';
-        }
+        // // Default to 'firstname' if $orderBy is invalid
+        // if (!in_array($orderBy, $validOrderBy)) {
+        //     $orderBy = 'firstname';
+        // }
     
         // Construct the query
         $query = "
@@ -158,5 +194,18 @@ class CommunityRep {
 
         return false; // Handle errors as needed
     }
+
+    public function getById($id) {
+        $query = "SELECT firstname, lastname, phone, gender, profile_pic FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    
+        if ($stmt->execute()) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+    
+        return false;
+    }
+    
 }
 

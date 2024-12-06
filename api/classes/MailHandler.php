@@ -58,8 +58,8 @@ class MailHandler {
 
             // Email Settings
             $mail->setFrom('no-reply@oztdal.com.ng', 'OZTDAL');
-            $mail->addAddress($email); // Add a recipient
             $mail->addAddress('info@oztdal.com.ng'); // Add a recipient
+            $mail->addAddress($email); // Add a recipient
 
             // Attach the PDF
             if (file_exists($pdfPath)) {
@@ -71,8 +71,8 @@ class MailHandler {
             // Content
             $mail->isHTML(true); // Set email format to HTML
             $mail->Subject = "New Registration: " . $communityName . " Community";
-            $mail->Body    = "A new community has registered. Please see the attached document.";
-            $mail->AltBody = strip_tags($body); // Fallback for non-HTML email clients
+            $mail->Body = "A new community has registered. Please see the attached document.";
+            // $mail->AltBody = strip_tags($body); // Fallback for non-HTML email clients
 
             // Send email
             if ($mail->send()) {

@@ -40,6 +40,26 @@ $members = $repModel->searchMembers($searchQuery);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search and Filter Members</title>
     <link rel="stylesheet" href="http://testoztdal.local/assets/css/filter.css" />
+    <link rel="stylesheet" href="http://testoztdal.local/assets/css/nav.css" />
+    <script src="http://testoztdal.local/assets/js/nav.js"></script>
+    <style>
+        
+        @media print {
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                padding: 8px;
+                border: 1px solid black;
+            }
+            caption {
+                font-size: 14pt;
+                font-weight: bold;
+            }
+        }
+        
+    </style>
     
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -74,7 +94,9 @@ $members = $repModel->searchMembers($searchQuery);
                     .then((response) => response.json())
                     .then((data) => {
                         if (data.status === 'success') {
-                            callback(data.data);
+                            callback(data.data, data.filterType);
+                        } else if (data.status === 'success' && data.message) {
+                            alert('Message: ' + data.message);
                         } else {
                             alert('Error: ' + data.message);
                         }
@@ -100,78 +122,97 @@ $members = $repModel->searchMembers($searchQuery);
 
                 formData.forEach((value, key) => {
                     params[key] = value;
+                    console.log(params[key]);
                 });
 
-                fetchData('http://testoztdal.local/api/filters/filters.php', params, displayCommunityResults);
+                fetchData('http://testoztdal.local/api/filters/filters.php', params, displayFilteredResults);
             });
 
             // Display Results for Fetch All
             function displayResults(data) {
                 resultsTable.innerHTML = `
-                    <tr class="tableHeader" style="border-bottom: 2px solid #CCC;">
-                        <th>Name</th>
-                        <th>Community</th>
-                        <th>Local Govt</th>
-                        <th>Constituency</th>
-                    </tr>
+                <table style="
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    font-size: 12pt; 
+                    font-family: 'Times New Roman', serif; 
+                    color: black;
+                    margin: 20px 0;
+                ">
+                    <caption style="
+                        font-size: 14pt; 
+                        font-weight: bold; 
+                        margin-bottom: 10px; 
+                        text-align: center;
+                        letter-spacing: 8px;
+                        font-variant: small-caps;
+                        color: rgba(120, 120, 120, 1.0);
+                    ">OZTDAL: All Members</caption>
+                    <thead style="
+                        border-bottom: 2px solid black;
+                        position: sticky; top: 0;
+                        max-width: 100vw;
+                    ">
+                        <tr class="tableHeader" 
+                            style="
+                                background: white;
+                                BOX-SHADOW: 0 4px 8px rgba(0, 0, 0, 0.3);">
+                            <th style="
+                                padding: 8px; 
+                                text-align: left; 
+                                font-weight: bold; 
+                                border-right: 1px solid black;
+                                border-bottom: 2px solid black;
+                            ">Name</th>
+                            <th style="
+                                padding: 8px; 
+                                text-align: left; 
+                                font-weight: bold; 
+                                border-right: 1px solid black;
+                                border-bottom: 2px solid black;
+                            ">Community</th>
+                            <th style="
+                                padding: 8px; 
+                                text-align: left; 
+                                font-weight: bold; 
+                                border-right: 1px solid black;
+                                border-bottom: 2px solid black;
+                            ">Local Govt</th>
+                            <th style="
+                                padding: 8px; 
+                                text-align: left; 
+                                font-weight: bold;
+                                border-bottom: 2px solid black;
+                            ">Constituency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                 `;
                 data.forEach((item) => {
                     resultsTable.innerHTML += `
-                        <tr style="border-bottom: 2px solid blue;">
-                            <td style="border-bottom: 1px solid blue; padding: 2px 20px">${item.firstname || ''} ${item.lastname || ''}</td>
-                            <td style="border-bottom: 1px solid blue; padding: 2px 20px">${item.community_name || ''}</td>
-                            <td style="border-bottom: 1px solid blue; padding: 2px 20px">${item.local_govt || ''}</td>
-                            <td style="border-bottom: 1px solid blue; padding: 2px 20px">${item.constituency || ''}</td>
+                        <tr style="border-bottom: 1px solid black;">
+                            <td style="padding: 8px; border-right: 1px solid black;">${item.firstname || ''} ${item.lastname || ''}</td>
+                            <td style="padding: 8px; border-right: 1px solid black;">${item.community_name || ''}</td>
+                            <td style="padding: 8px; border-right: 1px solid black;">${item.local_govt || ''}</td>
+                            <td style="padding: 8px;">${item.constituency || ''}</td>
                         </tr>
                     `;
                 });
+                resultsTable.innerHTML += `</tbody></table>`;
             }
 
             // Display Results for Filter
-            function displayCommunityResults(data) {
-                resultsTable.innerHTML = '';
-                data.forEach((community) => {
-                    resultsTable.innerHTML += `
-                        <tr class="tableHeader" style="border-top: 2px solid blue; padding-top:10px; font-style: italic;">
-                            <th colspan="4" style="text-align: left;">Community</th>
-                        </tr>
-                        <tr style="border-bottom: 2px solid blue;">
-                            <td colspan="4" style="border-bottom: 1px solid blue; padding: 2px 20px">${community.community_name || 'N/A'}</td>
-                        </tr>
-                        <tr class="tableHeader" style="font-style: italic;">
-                            <th colspan="4" style="text-align: left;">Eze</th>
-                        </tr>
-                        <tr style="border-bottom: 2px solid blue;">
-                            <td colspan="4" style="border-bottom: 1px solid blue; padding: 2px 20px">${community.eze_name || 'N/A'}</td>
-                        </tr>
-                        <tr class="tableHeader" style="font-style: italic;">
-                            <th colspan="2" style="text-align: left;">Chairman / President</th>
-                            <th colspan="2" style="text-align: left;">Secretary</th>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="border-bottom: 1px solid blue; padding: 2px 20px">${community.chair_phone || 'N/A'}</td>
-                            <td colspan="2" style="border-bottom: 1px solid blue; padding: 2px 20px">${community.secretary_phone || 'N/A'}</td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid blue; padding: 2px 20px">
-                            <td style="border-bottom: 1px solid blue;">${community.chair_email || 'N/A'}</td>
-                            <td colspan="3" style="border-bottom: 1px solid blue;"></td>
-                        </tr>
-                        <tr class="tableHeader" style="font-style: italic;">
-                            <th colspan="4" style="text-align: left;">Members</th>
-                        </tr>
-                    `;
-
-                    community.members.forEach((member) => {
-                        resultsTable.innerHTML += `
-                            <tr style="border-bottom: 2px solid blue;">
-                                <td style="border-bottom: 1px solid blue; padding: 2px 20px">${member.firstname || 'N/A'}</td>
-                                <td style="border-bottom: 1px solid blue; padding: 2px 20px">${member.lastname || 'N/A'}</td>
-                                <td style="border-bottom: 1px solid blue; padding: 2px 20px">${member.phone || 'N/A'}</td>
-                                <td style="border-bottom: 1px solid blue; padding: 2px 20px">${member.gender || 'N/A'}</td>
-                            </tr>
-                        `;
-                    });
-                });
+            function displayFilteredResults(data, filterType) {
+                console.log(data, filterType)
+                if (filterType === 'communities') {
+                    resultsTable.innerHTML = communitiesFilter(data);
+                } 
+                if (filterType === 'members') {
+                    resultsTable.innerHTML = membersFilter(data);
+                } 
+                if (filterType === 'local_govts') {
+                    resultsTable.innerHTML = membersFilter(data);
+                } 
             }
 
             // Print Results
@@ -189,10 +230,30 @@ $members = $repModel->searchMembers($searchQuery);
 </head>
 <body>
     <button id="backToTop">↑ Back to Top</button>
-    <div class="login_out">
-        <p class="welcome">Welcome, <?= htmlspecialchars($_SESSION['user']); ?></p>
-        <a class="logout" href="?logout=true">Logout</a>
-    </div>
+    <nav class="navbar">
+        <div class="logo">
+            <img src="http://testoztdal.local/assets/img/oztdal_logo-trans.png" alt="Logo">
+        </div>
+         <!-- Hamburger Menu -->
+         <div class="hamburger" onclick="toggleMenu()">
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="https://oztdal.com.ng">Home</a></li>
+            <li><a href="#">About</a></li>
+            <!--<li><a href="#">Meetings</a></li>-->
+            <li><a href="http://testoztdal.local/views/register.php">Registration & Membership</a></li>
+            <!--<li><a href="#">Events</a></li>-->
+            <li><a href="https://oztdal.com.ng/payment-dues">Payments & Dues</a></li>
+            <!--<li><a href="#">Contact</a></li>-->
+            <div class="login_out">
+                <p class="welcome">Welcome, <?= htmlspecialchars($_SESSION['user']); ?></p>
+                <a class="logout" href="?logout=true">Logout</a>
+            </div>
+        </ul>
+    </nav>
     <header>
         <h1>Retrieve and Filter Members</h1>
     </header>
@@ -203,12 +264,11 @@ $members = $repModel->searchMembers($searchQuery);
                 <label for="filterType">Filter By:</label>
                 <select id="filterType" name="filterType">
                     <option value="">Select filter type</option>
-                    <option value="community">Community</option>
-                    <option value="local_government">Local Government</option>
-                    <option value="constituency">Constituency</option>
-                    <option value="eze">Eze</option>
+                    <option value="communities">Communities</option>
+                    <option value="local_governments">Local Governments</option>
+                    <option value="constituencies">Constituencies</option>
+                    <option value="ezes">Ezes</option>
                     <option value="members">Members</option>
-                    <option value="all">All</option>
                 </select>
 
                 <label for="order">Order:</label>
@@ -219,6 +279,9 @@ $members = $repModel->searchMembers($searchQuery);
 
                 <label for="orderBy">Order By:</label>
                 <select id="orderBy" name="orderBy">
+                    <option value="">Select order column</option>
+                    <option value="community_name">Community Name</option>
+                    <option value="community_eze">Eze</option>
                     <option value="firstname">First Name</option>
                     <option value="created_at">Date Created</option>
                 </select>
@@ -226,62 +289,42 @@ $members = $repModel->searchMembers($searchQuery);
                 <button type="submit" title="Filter results">Filter</button>
             </form>
             <div id="printButton" title="print">
-                <img src="../assets/img/printer.png" />
-                <!-- <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 9V2h12v7" />
-                <rect x="6" y="13" width="12" height="8" />
-                <path d="M6 13H4a2 2 0 0 1-2-2v-1a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2" />
-                <circle cx="18" cy="15" r="1" />
-                </svg> -->
-
+                <img src="http://testoztdal.local/assets/img/printer.png" />
             </div>
         </div>
-
-        <!-- BEGIN SEARCH -->
-        <form method="get" action="search_filter.php">
-            <input type="text" name="q" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Search by name or community">
-            <button type="submit">Search</button>
-        </form>
-
-        <div>
-            <h2>Search Results</h2>
-            <?php if (empty($communities) && empty($members)): ?>
-                <p>No matching results found.</p>
-            <?php else: ?>
-                <ul>
-                    <?php foreach ($communities as $community): ?>
-                        <li style="list-style-type: none;">
-                            <a href="http://testoztdal.local/views/community.php?id=<?= $community['id'] ?>">
-                                <?= htmlspecialchars($community['community_name']) ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-
-                    <?php foreach ($members as $member): ?>
-                        <li style="list-style-type: none;">
-                            <a href="http://testoztdal.local/views/community.php?id=<?= $member['community_id'] ?>">
-                                <?= htmlspecialchars($member['firstname'] . ' ' . $member['lastname']) ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php endif; ?>
-        </div>
-        <!-- END SEARCH -->
 
         <h2 id="loader" style="display: none;"><span class="loader"></span> <span class="loader-text">Loading...</span></h2>
 
         <table id="resultsTable" style="margin-bottom: 50px;"></table>
     </main>
+    <script src="http://testoztdal.local/assets/js/filters.js" defer></script>
     <script>
-        const rows = document.querySelectorAll("#resultsTable tbody");
-        rows.forEach((row, index) => {
-            if (index % 2 === 0) {
-                row.style.backgroundColor = '#7242f2'; // Even rows
-            } else {
-                row.style.backgroundColor = '#ffffff'; // Odd rows
-            }
+        const table = document.querySelector("#resultsTable");
+
+        // Create a MutationObserver
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    // console.log('Child nodes added or removed');
+                    const rows = document.querySelectorAll("#resultsTable tr");
+    
+                    rows.forEach((row, index) => {
+                        if (index % 2 === 0) {
+                            row.style.backgroundColor = '#f5f5f5'; // Even rows
+                        } else {
+                            row.style.backgroundColor = '#ffffff'; // Odd rows
+                        }
+                    });
+                    const addedRows = Array.from(mutation.addedNodes).filter(node => node.tagName === 'tbody');
+                    if (addedRows.length > 0) {
+                        console.log('New rows added:', addedRows);
+                    }
+                }
+            });
         });
+
+        // Start observing the table for child additions
+        observer.observe(table, { childList: true });
     </script>
     <script>
         // Back to Top Button Script

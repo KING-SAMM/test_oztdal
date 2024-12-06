@@ -30,19 +30,61 @@ if ($action === 'fetch_all') {
     $data = $communityRep->getAllMembersWithDetails();
     echo json_encode(['status' => 'success', 'data' => $data]);
 } elseif ($action === 'filter') {
-    $filterType = $request['filterType'] ?? 'community';
+    $filterType = $request['filterType'] ?? 'communities';
+    $orderBy = $request['orderBy'] ?? 'community_name';
     $order = $request['order'] ?? 'ASC';
-    $orderBy = $request['orderBy'] ?? 'firstname';
+    // No filterType selected? default to 'community'
+    if (!$filterType || $filterType === 'communities') {
+        $filterType = 'communities';  
+        // Within community, if no orderBy is selected or is set to firstname 
+        if (!$orderBy || $orderBy === 'firstname') 
+        {
+            $orderBy = 'community_name';  // Default to 'community_name'
+        } 
+        else 
+        {
+            $orderBy = $request['orderBy'];  // Else use what is selected
+        }
 
-    $communityRep = new CommunityRep($db);
-    // $data = $communityRep->getFilteredData($filterType, $order, $orderBy);
-    $data = $communityRep->getCommunityDetails($filterType, $order, $orderBy);
-    if (!$data) {
-        http_response_code(500);
-        echo json_encode(['status' => 'error', 'message' => 'Database error...']);
-        exit();
+        $community = new Community($db);
+        $data = $community->getFilteredData($orderBy, $order);
+        if (count($data) === 0) 
+        {
+            // If data ($result) is an empty array with zero elements
+            http_response_code(200);
+            echo json_encode(['status' => 'noresult', 'message' => 'No results found!']);
+            exit();
+        } elseif (!$data) {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => 'Server error...']);
+            exit();
+        }
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'filterType' => $filterType, 'data' => $data]);
+    } elseif ($filterType === 'members') {
+        // Within members, if no orderBy is selected or is set to community_name or community_eze 
+        if ($orderBy && ($orderBy === 'community_name' || $orderBy === 'community_eze')) {
+                $orderBy = 'firstname';  // Default to 'firstname'
+        } else {
+            $orderBy = $request['orderBy'];  // Else use what is selected
+        }
+
+        $communityRep = new CommunityRep($db);
+        $data = $communityRep->getFilteredData($orderBy, $order);
+        if (count($data) === 0) 
+        {
+            // If data ($result) is an empty array with zero elements
+            http_response_code(200);
+            echo json_encode(['status' => 'noresult', 'message' => 'No results found!']);
+            exit();
+        } elseif (!$data) {
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => 'Server error...']);
+            exit();
+        }
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'filterType' => $filterType, 'data' => $data]);
     }
-    echo json_encode(['status' => 'success', 'data' => $data]);
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Unknown action']);
 }

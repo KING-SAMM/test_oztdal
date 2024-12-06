@@ -68,12 +68,20 @@ header h1 {
     padding: 30px;
 
     background-color: rgba(0, 19, 82, 0.8);
-    background-color: linear-gradient();
+    background: linear-gradient(
+        135deg,
+        rgba(0, 10, 50, 0.9), /* Darker start */
+        rgba(0, 40, 100, 0.95), /* Transition to darker mid */
+        rgba(0, 19, 82, 0.8), /* Midpoint lighter */
+        rgba(0, 80, 180, 0.9), /* Lighter transition */
+        rgba(0, 19, 82, 0.8), /* Return to lighter */
+        rgba(0, 10, 50, 0.9) /* Darker end */
+    );
     border-radius: 8px;
     backdrop-filter: blur(30px); /* Apply blur to the background */
     -webkit-backdrop-filter: blur(30px); /* Safari support */
     border: 1px solid rgba(245, 245, 255, 0.2); /* Light border for definition */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .main form .form-title {
@@ -182,6 +190,12 @@ header h1 {
         justify-content: space-between;
         align-items: center;
     }
+}
+
+.main form .profile_pic .imageinput_box {
+    display: flex;
+    flex-direction: column;
+
 }
 
 .main form .profile_pic .preview {

@@ -62,3 +62,65 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+
+// Dynamic active links
+document.addEventListener('DOMContentLoaded', () => {
+    // Get all navigation links
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    // Function to update active link dynamically
+    function updateActiveLink() {
+        const currentPage = window.location.pathname.split('/').pop();
+
+        navLinks.forEach(link => {
+            // Remove 'active' class from all links
+            link.classList.remove('active');
+
+            // Add 'active' class to the link matching the current page
+            if (link.getAttribute('href') === currentPage || (currentPage === '' && link.getAttribute('href') === 'index.html')) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // Update the active link on page load
+    document.addEventListener('DOMContentLoaded', updateActiveLink);
+
+    // Add a click event listener to dynamically update the active link
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.forEach(nav => nav.classList.remove('active')); // Remove existing active class
+            link.classList.add('active'); // Add active class to clicked link
+        });
+    });
+});
+
+// Retain selected options for dynamically loaded selects
+// document.addEventListener('DOMContentLoaded', () => {
+//     const selectedLocalGovt = document.getElementById('selected_local_govt').value;
+//     const selectedConstituency = document.getElementById('selected_constituency').value;
+
+//     // Load options dynamically
+//     loadOptions('local_govt_id', selectedLocalGovt); // Pass ID and pre-selected value
+//     loadOptions('constituency_id', selectedConstituency); // Pass ID and pre-selected value
+// });
+
+// function loadOptions(selectId, selectedValue) {
+//     const select = document.getElementById(selectId);
+//     // Simulate an API call to populate options
+//     fetch(`http://testoztdal.local/api/${selectId}`)
+//         .then((response) => response.json())
+//         .then((data) => {
+//             select.innerHTML = '<option value="" disabled>-- Select an Option --</option>';
+//             data.forEach((item) => {
+//                 const option = document.createElement('option');
+//                 option.value = item.id;
+//                 option.textContent = item.name;
+//                 if (item.id === selectedValue) {
+//                     option.selected = true;
+//                 }
+//                 select.appendChild(option);
+//             });
+//         });
+// }

@@ -1,5 +1,14 @@
 <?php
 session_start();
+// Check for logout request
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: http://testoztdal.local/auth/access.php');
+    exit;
+}
+
+// Determine whether the user is logged in
+$isLoggedIn = isset($_SESSION['user']);
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'controllers' . DIRECTORY_SEPARATOR . 'Validate.php';
 class RegisterFormHandler {
@@ -7,22 +16,22 @@ class RegisterFormHandler {
     private $maxImageSize = 1.95 * 1024 * 1024; // 1.95 MB
     private $allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     private $tempDir = 'uploads/tmp/';
-    private $requiredNamePattern = '/^[a-zA-Z\s]+$/'; // '/^[a-zA-Z]+( [a-zA-Z_]+)*$/'; 
-    private $requiredPhonePattern = "/^\+[1-9]\d{0,3}[1-9]\d{6,14}$/"; // '/^\+[0-9]{8,}$/';
+    private $requiredNamePattern = '/^[a-zA-Z\s]+$/';
+    private $requiredPhonePattern = "/^\+[1-9]\d{0,3}[1-9]\d{6,14}$/";
     private $nameFieldErrorMsg = 'Only letters and white spaces are allowed';
     private $phoneFieldErrorMsg = 'Invalid phone number format';
     private $emailFieldErrorMsg = 'Invalid email format';
-    // Reps
 
-
-    public function __construct() {
-        // Ensure the temp directory exists
-        if (!is_dir($this->tempDir)) {
+    public function __construct() 
+    {
+        if (!is_dir($this->tempDir)) 
+        {
             mkdir($this->tempDir, 0777, true);
         }
     }
 
-    public function processForm() {
+    public function processForm() 
+    {
         if ($_SERVER["REQUEST_METHOD"] == "POST") 
         {
             $validate = new Validate();
@@ -33,23 +42,25 @@ class RegisterFormHandler {
             $communityEze = $validate->field($_POST['community_eze'], 'Community eze', $this->requiredNamePattern, $this->nameFieldErrorMsg, $_SESSION['invalid_fields']);
             $localGovtId = $_POST['local_govt_id'];
             $constituencyId = $_POST['constituency_id'];
-            $lgCommHeadEmail = $validate->email($_POST['lg_comm_head_email'], 'Chairman/President email', $this->emailFieldErrorMsg);
+            $lgCommHeadEmail = $validate->email($_POST['lg_comm_head_email'], 'Chairman/President email', $this->emailFieldErrorMsg, $_SESSION['invalid_fields']);
             $lgCommHeadPhone = $validate->field($_POST['lg_comm_head_phone'], 'Chairman/President Phone', $this->requiredPhonePattern, $this->phoneFieldErrorMsg, $_SESSION['invalid_fields']);
             $lgCommSecPhone = $validate->field($_POST['lg_comm_sec_phone'], 'Secretary Phone', $this->requiredPhonePattern, $this->phoneFieldErrorMsg, $_SESSION['invalid_fields']);
             $letterHead = $_FILES['letter_head_file'] ?? null;
             $reps = $_POST['reps'];
        
-            // Validate and save the letterhead PDF
-            if (!$letterHead || !$this->validatePDF($letterHead)) 
-            {
-                $_SESSION['invalid_letterhead'] = "Letterhead must be a PDF file.";
-                // exit;
+
+            if (isset($_POST['uploaded_file_path']) && file_exists($_POST['uploaded_file_path'])) {
+                $_SESSION['uploaded_letter_head'] = $_POST['uploaded_file_path'];
+            } else {
+                $letterHead = $_FILES['letter_head_file'] ?? null;
+                if (!$letterHead || !$this->validatePDF($letterHead)) {
+                    $_SESSION['invalid_letterhead'] = "Letterhead must be a PDF file.";
+                } else {
+                    $letterHeadTempPath = $this->saveTempFile($letterHead);
+                    $_SESSION['uploaded_letter_head'] = $letterHeadTempPath;
+                }
             } 
-            else 
-            {
-                $letterHeadTempPath = $this->saveTempFile($letterHead);
-                $_SESSION['uploaded_letter_head'] = $letterHeadTempPath;
-            }
+
 
             $data = [
                 'community_name' => $communityName,
@@ -65,70 +76,72 @@ class RegisterFormHandler {
                 'letter_head_file' => new CURLFile($_SESSION['uploaded_letter_head'], 'application/pdf', $letterHead['name'])
             ];
 
-            // $_SESSION['invalid_rep_field'] = [];
-            // Process each rep's data
-            foreach ($reps as $index => $rep) 
-            {
+            
+            foreach ($reps as $index => $rep) {
                 $firstname = $validate->repField($rep['firstname'], 'Representative ' .($index + 1).' firstname', $this->requiredNamePattern, $this->nameFieldErrorMsg, $_SESSION['invalid_fields']);
                 $lastname = $validate->repField($rep['lastname'], 'Representative ' .($index + 1).' lastname', $this->requiredNamePattern, $this->nameFieldErrorMsg, $_SESSION['invalid_fields']);
                 $phone = $validate->repField($rep['phone'], 'Representative ' .($index + 1).' phone', $this->requiredPhonePattern, $this->phoneFieldErrorMsg, $_SESSION['invalid_fields']);
                 $gender = $rep['gender'];
 
-                $profilePicArray = [
-                    'name' => $_FILES['reps']['name'][$index]['profile_pic'],
-                    'type' => $_FILES['reps']['type'][$index]['profile_pic'],
-                    'tmp_name' => $_FILES['reps']['tmp_name'][$index]['profile_pic'],
-                    'error' => $_FILES['reps']['error'][$index]['profile_pic'],
-                    'size' => $_FILES['reps']['size'][$index]['profile_pic']
-                ];
 
-                $profilePicPath = $this->validateAndProcessImage($profilePicArray, $index);
-                
-                
-                if (!$profilePicPath) 
+                if (isset($_POST['uploaded_image_file_path-'.($index)]) && file_exists($_POST['uploaded_image_file_path-'.($index)]))
                 {
-                    $_SESSION['invalid_image'] = "Invalid profile picture for representative " . ($index + 1);
-                    exit;
-                    // return false;
-                }
-                if ($profilePicPath == "Failed to upload passport photo for representative " . ($index + 1)) 
-                {
-                    $_SESSION['invalid_image'] = "Failed to upload passport photo for representative " . ($index + 1);
-                    // exit;
-                } 
-                elseif ($profilePicPath == "Passport photo exceeds 1.95MB. Please upload a smaller file representative " . ($index + 1)) 
-                {
-                    $_SESSION['invalid_image'] = "Passport photo exceeds 1.95MB. Please upload a smaller file for representative " . ($index + 1);
-                    // exit;
-                    // return $_SESSION['invalid_image'];
-                } 
-                elseif ($profilePicPath == "Passport photo is not of the allowed formats for representative " . ($index + 1)) 
-                {
-                    $_SESSION['invalid_image'] = "Passport photo is not of the allowed formats for representative " . ($index + 1);
-                    // return false;
-                    // exit;
+                    $_SESSION['uploaded_image_file'][$index] = $_POST['uploaded_image_file_path-'.($index)];
                 } 
                 else 
                 {
-                    $_SESSION['uploaded_files'][$index] = $profilePicPath;
+                    $profilePicArray = [
+                        'name' => $_FILES['reps']['name'][$index]['profile_pic'],
+                        'type' => $_FILES['reps']['type'][$index]['profile_pic'],
+                        'tmp_name' => $_FILES['reps']['tmp_name'][$index]['profile_pic'],
+                        'error' => $_FILES['reps']['error'][$index]['profile_pic'],
+                        'size' => $_FILES['reps']['size'][$index]['profile_pic']
+                    ] ?? null;
 
-    
-                    $data["reps[$index][firstname]"] = $firstname;
-                    $data["reps[$index][lastname]"] = $lastname;
-                    $data["reps[$index][phone]"] = $phone;
-                    $data["reps[$index][gender]"] = $gender;
-                    $files["reps[$index][profile_pic]"] = new CURLFile($profilePicPath, mime_content_type($profilePicPath), basename($profilePicPath));
+                    $profilePicPath = $this->validateAndProcessImage($profilePicArray, $index);
+                    
+                    
+                    if (!$profilePicPath) 
+                    {
+                        $_SESSION['invalid_image'] = "Invalid profile picture for representative " . ($index + 1);
+                        exit;
+                    }
+                    if ($profilePicPath == "Failed to upload passport photo for representative " . ($index + 1)) 
+                    {
+                        $_SESSION['invalid_image'] = "Failed to upload passport photo for representative " . ($index + 1);
+                    } 
+                    elseif ($profilePicPath == "Passport photo exceeds 1.95MB. Please upload a smaller file representative " . ($index + 1)) 
+                    {
+                        $_SESSION['invalid_image'] = "Passport photo exceeds 1.95MB. Please upload a smaller file for representative " . ($index + 1);
+                    } 
+                    elseif ($profilePicPath == "Passport photo is not of the allowed formats for representative " . ($index + 1)) 
+                    {
+                        $_SESSION['invalid_image'] = "Passport photo is not of the allowed formats for representative " . ($index + 1);
+                    } 
+                    else
+                    {
+                        $_SESSION['uploaded_image_file'][$index] = $profilePicPath;
+                    }
+                }
+                $data["reps[$index][firstname]"] = $firstname;
+                $data["reps[$index][lastname]"] = $lastname;
+                $data["reps[$index][phone]"] = $phone;
+                $data["reps[$index][gender]"] = $gender;
+
+                // If image file exceeds 1.95MB it will not be uploaded, as a result
+                // it will not be stored in session, handle such (and similar) case
+                if (!$_SESSION['uploaded_image_file'][$index]) 
+                {
+                    $_SESSION['invalid_image'] = "Invalid profile picture for representative " . ($index + 1) . ". Ensure it doesn't exceed 1.95 MB";
+                } else 
+                {
+                    $files["reps[$index][profile_pic]"] = new CURLFile($_SESSION['uploaded_image_file'][$index], mime_content_type($_SESSION['uploaded_image_file'][$index]), basename($_SESSION['uploaded_image_file'][$index])); // Perhaps use $profilePicArray['name']
                 }
             }
-
-            // print_r($_SESSION['invalid_rep_field']);
-            // var_dump($_SESSION['invalid_rep_field']);
-            //     // exit;
 
             // Send to API only if no errors
             if (!isset($_SESSION['invalid_image']) && 
                 !isset($_SESSION['invalid_letterhead']) &&
-                !isset($_SESSION['invalid_email']) &&
                 ($_SESSION['invalid_fields'] == null || !$_SESSION['invalid_fields'])) 
             {
                 $this->sendToApi($data, $files);
@@ -151,17 +164,14 @@ class RegisterFormHandler {
     {
         if (!in_array($image['type'], $this->allowedImageTypes)) 
         {
-            // $_SESSION['invalid_image'] = "Passport photo is not of the allowed formats for representative " . $index;
             return "Passport photo is not of the allowed formats for representative " . ($index + 1);
         }
         if ($image['size'] > $this->maxImageSize) 
         { 
-            // $_SESSION['invalid_image'] = "Passport photo exceeds 1.95MB. Please upload a smaller file representative " . $index;
             return "Passport photo exceeds 1.95MB. Please upload a smaller file representative " . ($index + 1);
         }
         if (isset($image['error']) && $image['error'] !== UPLOAD_ERR_OK) 
         {
-            // $_SESSION['invalid_image'] = "Failed to upload passport photo for representative " . $index;
             return "Failed to upload passport photo for representative " . ($index + 1);
         }       
          
@@ -211,8 +221,7 @@ class RegisterFormHandler {
 
         $_SESSION['decodedResponses'] = $decodedResponses;
         $_SESSION['httpStatusCode'] = $httpStatusCode;
-        
-        
+    
         if (curl_errno($ch)) 
         {
             echo "cURL error: " . curl_error($ch);
@@ -220,13 +229,13 @@ class RegisterFormHandler {
     
         curl_close($ch);
     }
-
+    
     private function clearFormAndTemporaryFiles() {
         // Remove uploaded temp files
         array_map('unlink', glob($this->tempDir . '*'));
 
         // Clear session data
-        unset($_SESSION['form_data'], $_SESSION['uploaded_letter_head'], $_SESSION['uploaded_files'], $_SESSION['invalid_fields'], $_SESSION['invalid_letterhead'], $_SESSION['invalid_image']);
+        unset($_SESSION['form_data'], $_SESSION['uploaded_letter_head'], $_SESSION['uploaded_image_file'], $_SESSION['invalid_fields'], $_SESSION['invalid_letterhead'], $_SESSION['invalid_image']);  
     }
 }
 
@@ -244,7 +253,7 @@ $formHandler->processForm();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Community</title>
     <link rel="stylesheet" href="http://testoztdal.local/assets/css/main.css" />
-    <script src="http://testoztdal.local/assets/js/retrieve.js" defer></script>
+    <link rel="stylesheet" href="http://testoztdal.local/assets/css/nav.css" />
     <script src="http://testoztdal.local/assets/js/notification.js" defer></script>
 </head>
 <body>
@@ -258,22 +267,16 @@ $formHandler->processForm();
             <div id="warningNotification" class="warning-notification validate">
                 <?= htmlspecialchars($_SESSION['invalid_letterhead'], ENT_QUOTES, 'UTF-8'); ?>
             </div>
-        <?php elseif (isset($_SESSION['invalid_email']) && $_SESSION['invalid_email'] != null): ?>
-            <div id="warningNotification" class="warning-notification validate">
-                <?= htmlspecialchars($_SESSION['invalid_letterhead'], ENT_QUOTES, 'UTF-8'); ?>
-            </div>
-        
         <?php endif; ?>
         <?php 
-          $invalidFields = $_SESSION['invalid_fields'] ?? []; // Ensure variable exists and is an array
+            $invalidFields = $_SESSION['invalid_fields'] ?? []; 
             foreach ($invalidFields as $invalidFieldMsg): ?>
                 <div id="warningNotification" class="warning-notification validate">
                     <?= htmlspecialchars($invalidFieldMsg, ENT_QUOTES, 'UTF-8'); ?>
                 </div>
         <?php endforeach;?>
-       
         <?php
-         $decodedResponses = $_SESSION['decodedResponses'] ?? []; // Ensure variable exists and is an array
+         $decodedResponses = $_SESSION['decodedResponses'] ?? []; 
          foreach ($decodedResponses as $response): ?>
              <?php if ($response['status'] == 'success'): ?>
                  <div id="flashNotification" class="flash-notification success" style="color: white;">
@@ -287,19 +290,46 @@ $formHandler->processForm();
          <?php endforeach; ?>
 
         <?php
-            // Clear the session warning data after rendering
-            unset($_SESSION['invalid_image'], $_SESSION['invalid_letterhead'], $_SESSION['invalid_fields'], $_SESSION['invalid_email'], $_SESSION['decodedResponses']);  
+            unset($_SESSION['invalid_image']);
+            unset($_SESSION['invalid_letterhead']);
+            unset($_SESSION['invalid_fields']);
+            unset($_SESSION['decodedResponses']);
         ?>
     
-    <div id="loader" class="loader"></div>
-    <!--<div id="warningNotification" class="warning-notification">
-       
-        // htmlspecialchars($message) 
-        
-    </div>-->
-    
+    <div id="loader" class="loader"></div> 
    
     <div class="overlay">
+        <nav class="navbar">
+            <div class="logo">
+                <img src="http://testoztdal.local/assets/img/oztdal_logo-trans.png" alt="Logo">
+            </div>
+            <!-- Hamburger Menu -->
+            <div class="hamburger" onclick="toggleMenu()">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="https://oztdal.com.ng/">Home</a></li>
+                <?php if (!$isLoggedIn): ?>
+                    <li><a href="#">About</a></li>
+                <?php else: ?>
+                    <li><a href="http://testoztdal.local/views/search_filter.php">Filter</a></li>
+                <?php endif; ?>
+                <li><a href="#">Meetings</a></li>
+                <li><a href="#">Registration & Membership</a></li>
+                <li><a href="#">Events</a></li>
+                <li><a href="https://oztdal.com.ng/payment-dues">Payments & Dues</a></li>
+                <?php if (!$isLoggedIn): ?>
+                    <li><a href="#">Contact</a></li>
+                <?php else: ?>
+                    <div class="login_out">
+                        <p class="welcome">Welcome, <?= htmlspecialchars($_SESSION['user']); ?></p>
+                        <a class="logout" href="?logout=true" style="text-decoration:none;">Logout</a>
+                    </div>
+                <?php endif; ?>
+            </ul>
+        </nav>
         <header>
             <h1>Register Your Community</h1>
         </header>
@@ -316,13 +346,22 @@ $formHandler->processForm();
                     <input type="text" id="community_eze" name="community_eze" class="main-fields" value="<?php echo htmlspecialchars($_POST['community_eze'] ?? '', ENT_QUOTES); ?>" required><br>
                     <span class="error community_eze_err"></span><br>
                     
-                    <label for="local_govt_id">Local Government Area (LGA):</label>
-                    <select id="local_govt_id" name="local_govt_id" required>
+                     <label for="local_govt_id">Local Government Area (LGA):</label>
+                    <?php
+                        $localGovtSelected = $_POST['local_govt_id'] ?? '';
+                    ?>
+                    <input type="hidden" id="selected_local_govt" name="selected_local_govt" value="<?php echo htmlspecialchars($_POST['local_govt_id'] ?? ''); ?>">
+
+                    <select id="local_govt_id" name="local_govt_id" data-selected="<?= htmlspecialchars($localGovtSelected) ?>" required>
                         <option value="" disabled selected>-- Select a Local Government --</option>
                     </select>
                     
                     <label for="constituency_id">Constituency:</label>
-                    <select id="constituency_id" name="constituency_id" required>
+                    <?php
+                        $constituencySelected = $_POST['constituency_id'] ?? '';
+                    ?>
+                    <input type="hidden" id="selected_constituency" name="selected_constituency" value="<?php echo htmlspecialchars($_POST['constituency_id'] ?? ''); ?>">
+                    <select id="constituency_id" name="constituency_id" data-selected="<?= htmlspecialchars($constituencySelected) ?>" required>
                         <option value="" disabled selected>-- Select a Constituency --</option>
                     </select>
                     
@@ -339,7 +378,23 @@ $formHandler->processForm();
                     <span class="error lg_comm_sec_phone_err"></span><br>
             
                     <label for="letter_head_file">Letter-headed PDF (A4 size):</label>
-                    <input type="file" id="letter_head_file" name="letter_head_file" accept="application/pdf" required><br><br>
+                    <input type="file" id="letter_head_file" name="letter_head_file" accept="application/pdf"
+                        <?php if (isset($_SESSION['uploaded_letter_head'])): ?>
+                            data-file-name="<?= basename($_SESSION['uploaded_letter_head']); ?>"
+                        <?php endif; ?>
+                        <?php if (!isset($_SESSION['uploaded_letter_head'])): ?>
+                            required
+                        <?php endif; ?>>
+                    <p id="file-name-display">
+                        <?php if (isset($_SESSION['uploaded_letter_head'])): ?>
+                            Chosen File: <?= basename($_SESSION['uploaded_letter_head']); ?>
+                        <?php else: ?>
+                            Chosen File: None
+                        <?php endif; ?>
+                    </p>
+                    <input type="hidden" id="uploaded_file_path" name="uploaded_file_path"
+                        value="<?= $_SESSION['uploaded_letter_head'] ?? ''; ?>">
+                    <br>
                 </fieldset>
                 
                 <div class="reps-section">
@@ -363,7 +418,7 @@ $formHandler->processForm();
                         $gender = isset($_POST['reps'][$i]['gender']) ? $_POST['reps'][$i]['gender'] : '';
     
                         // Check if a file was uploaded previously and saved temporarily
-                        $profilePicPath = isset($_SESSION['uploaded_files'][$i]) ? $_SESSION['uploaded_files'][$i] : '#';
+                        $profilePicPath = isset($_SESSION['uploaded_image_file'][$i]) ? $_SESSION['uploaded_image_file'][$i] : '#';
                         ?>
     
                         <fieldset>
@@ -386,21 +441,48 @@ $formHandler->processForm();
                             
                             
                             <div class="profile_pic">
-                                <label>Passport Photo:
-                                    <input type="file" name="reps[<?php echo $i; ?>][profile_pic]" accept="image/jpeg, image/jpg, image/png, image/gif" onchange="previewImage(event, 'preview-<?php echo $i; ?>')" required>
-                                </label>
-                                <!-- <img id="preview-<?php echo $i; ?>" class="preview" src="<?php echo $profilePicPath; ?>" alt="Profile Picture Preview" style="<?php echo $profilePicPath !== '#' ? 'display: block;' : 'display: none;'; ?>"> -->
-                                 
-                                 <img id="preview-<?php echo $i; ?>" class="preview" src="<?php echo $_SESSION['uploaded_files'][$i] ?? '#'; ?>" alt="Profile Picture Preview" style="<?php echo $profilePicPath !== '#' ? 'display: block;' : 'display: none;'; ?>"> 
-                               
+                                <div class="imageinput_box">
+                                    <label for="reps[<?php echo $i; ?>][profile_pic]">Passport Photo:</label>
+                                        <input 
+                                            type="file" 
+                                            name="reps[<?php echo $i; ?>][profile_pic]" 
+                                            id="reps[<?php echo $i; ?>][profile_pic]"
+                                            accept="image/jpeg, image/jpg, image/png, image/gif" onchange="previewImage(event, 'preview-<?php echo $i; ?>')" 
+                                        <?php if (isset($_SESSION['uploaded_image_file'][$i])): ?>
+                                            data-file-name="<?= basename($_SESSION['uploaded_image_file'][$i]); ?>"
+                                        <?php endif; ?>
+                                        <?php if (!isset($_SESSION['uploaded_image_file'][ $i])): ?>
+                                            required
+                                        <?php endif; ?>>
+                                        <p id="image-name-display-<?php echo $i; ?>">
+                                            <?php if (isset($_SESSION['uploaded_image_file'][ $i])): ?>
+                                                Chosen File: <?= basename($_SESSION['uploaded_image_file'][$i]); ?>
+                                            <?php else: ?>
+                                                Chosen File: None
+                                            <?php endif; ?>
+                                        </p>
+                                        <input type="hidden" id="uploaded_image_file_path-<?php echo $i; ?>" name="uploaded_image_file_path-<?php echo $i; ?>"
+                                            value="<?= $_SESSION['uploaded_image_file'][$i] ?? ''; ?>">
+                                        <br>
+                                </div>
     
-    
-                                <!--<img id="preview-<?php echo $i; ?>" class="preview" src="<?php echo $profilePicPath; ?>" alt="Profile Picture Preview" style="<?php echo $profilePicPath !== '#' ? 'display: block;' : 'display: none;'; ?>">-->
+                                 <img id="preview-<?php echo $i; ?>" class="preview" src="<?php echo $_SESSION['uploaded_image_file'][$i] ?? '#'; ?>" alt="Profile Picture Preview" style="<?php echo $profilePicPath !== '#' ? 'display: block;' : 'display: none;'; ?>"> 
+                            
                             </div>
     
                             <label>Gender:</label>
-                            <input type="radio" name="reps[<?php echo $i; ?>][gender]" value="male" <?php echo $gender === 'male' ? 'checked' : ''; ?> required> Male
-                            <input type="radio" name="reps[<?php echo $i; ?>][gender]" value="female" <?php echo $gender === 'female' ? 'checked' : ''; ?> required> Female
+                            <input 
+                                type="radio" 
+                                name="reps[<?php echo $i; ?>][gender]" 
+                                value="male" 
+                                <?php echo (empty($gender) || $gender === 'male') ? 'checked' : ''; ?> 
+                                required> Male
+                            <input 
+                                type="radio" 
+                                name="reps[<?php echo $i; ?>][gender]" 
+                                value="female" 
+                                <?php echo $gender === 'female' ? 'checked' : ''; ?> 
+                                required> Female
                         </fieldset>
                     <?php endfor; ?>
         
@@ -447,7 +529,49 @@ $formHandler->processForm();
     <script src="http://testoztdal.local/assets/js/validate_registration.js" defer></script>
     
     <script src="http://testoztdal.local/assets/js/helper.js" defer></script>    
-   
+    <script src="http://testoztdal.local/assets/js/retrieve.js" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashNotification = document.querySelector('.flash-notification.success');
+            if (flashNotification) {
+                // Automatically reset the form after a successful submission notification
+                document.getElementById('registerForm').reset();
+    
+                // Clear any preview images
+                <?php for ($i = 0; $i < 2; $i++): ?>
+                    const preview<?php echo $i; ?> = document.getElementById("preview-<?php echo $i; ?>");
+                    preview<?php echo $i; ?>.src = "#";
+                    preview<?php echo $i; ?>.style.display = "none";
+                <?php endfor; ?>
+            }
+        });
+    </script>
+    <script>
+        document.getElementById('letter_head_file').addEventListener('change', function(event) {
+            const fileInput = event.target;
+            const fileNameDisplay = document.getElementById('file-name-display');
 
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            }
+        });
+    </script>
+    <script>
+        <?php for ($i = 0; $i < 2; $i++): ?>
+            document.getElementById('reps[<?php echo $i; ?>][profile_pic]')?.addEventListener('change', function(event) {
+                const imageInput<?php echo $i; ?> = event.target;
+                const imageNameDisplay<?php echo $i; ?> = document.getElementById('image-name-display-<?php echo $i; ?>');
+
+                if (imageInput<?php echo $i; ?>.files.length > 0) {
+                    imageNameDisplay<?php echo $i; ?>.textContent = imageInput<?php echo $i; ?>.files[0].name;
+                } else {
+                    imageNameDisplay<?php echo $i; ?>.textContent = 'No file chosen';
+                }
+            });
+        <?php endfor; ?>
+    </script>
+    <script src="http://testoztdal.local/assets/js/nav.js" defer></script>
 </body>
 </html>

@@ -89,19 +89,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             // Send an email to the first representative in the list as a sample (or use a specific email for notifications)
             $result = MailHandler::sendEmail('kcsamm11@gmail.com', $communityName, $letterHeadFilePath);
-            if(!$result['error'])
+            
+            if(is_array($result))
             {
-                http_response_code(201);
-                echo json_encode([
-                    ["status" => "success", "message" => "Form details has been forwarded"],
-                    ["status" => "success", "message" => "Community and representatives added successfully!"]
-                ]);
+                if(array_key_exists('success', $result))
+                {
+                    http_response_code(201);
+                    echo json_encode([
+                        ["status" => "success", "message" => "Form details has been forwarded"],
+                        ["status" => "success", "message" => "Community and representatives added successfully!"]
+                    ]);
+                }
+                else
+                {
+                    http_response_code(500);
+                    echo json_encode(['status' => 'error', 'message' => $result['error']]);
+                }
             }
-            else
-            {
-                http_response_code(500);
-                echo json_encode(['status' => 'error', 'message' => $result['error']]);
-            }
+    
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);

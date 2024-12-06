@@ -8,17 +8,6 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.login_out {
-    display: flex;
-    flex-direction: column;
-    justify-content: right;
-    position: absolute;
-    top: 5px;
-    right: 20px;
-    padding: 10px;
-    background-color: rgba(255, 255, 255, 0.8);
-    z-index: 1000;
-}
 .welcome {
     display: inline-block;
     font-size: 1em;
@@ -40,6 +29,7 @@ header {
 }
 
 header h1 {
+    text-align: center;
     color: rgba(14, 5, 44, 0.9);
     color: rgba(247, 134, 5, 0.7);
 }
@@ -75,12 +65,79 @@ header h1 {
     max-width: 100%;
 }
 
-.main .formContainer .filterForm {
+/* .main .formContainer .filterForm {
     display: inline-block;
     width: 800px;
     margin: 0 auto;
     z-index: 1000;
+} */
+
+/* General Form Styling */
+#filterForm {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Space between items */
+    flex-wrap: wrap; /* Allows wrapping on small screens */
+    background-color: #f5f5f5; /* Light gray background */
+    padding: 1rem; /* Inner spacing */
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 5px; /* Rounded corners */
+    font-family: Arial, sans-serif;
 }
+
+/* Label Styling */
+#filterForm label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Select Styling */
+#filterForm select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background-color: #fff;
+    color: #333;
+    min-width: 150px; /* Ensures consistent width */
+}
+
+/* Button Styling */
+#filterForm button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: #007bff; /* Blue color */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover and Focus Effects */
+#filterForm button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+#filterForm button:focus {
+    outline: 2px solid #0056b3; /* Highlighted outline */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #filterForm {
+        flex-direction: column; /* Stack items on smaller screens */
+        align-items: stretch;
+    }
+
+    #filterForm select,
+    #filterForm button {
+        width: 100%; /* Full width for inputs and buttons */
+    }
+}
+
 
 .main .filterForm > #fetchAll {
     cursor: pointer;

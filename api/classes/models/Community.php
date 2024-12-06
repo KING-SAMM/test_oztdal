@@ -25,8 +25,9 @@ class Community {
 
         if ($stmt->execute()) {
             return $this->conn->lastInsertId(); // Return the created group ID
+        } else {
+            return false;
         }
-        return false;
     }
 
     public function storeLetterHeadFilePath($letterHeadFilePath, $communityId) {
@@ -53,7 +54,14 @@ class Community {
     }    
 
     public function getById($id) {
-        $query = "SELECT * FROM " . $this->table . " WHERE id = :id LIMIT 1";
+        $query = "
+            SELECT 
+                * 
+            FROM " 
+                . $this->table . " 
+            WHERE 
+                id = :id LIMIT 1
+        ";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
@@ -62,5 +70,46 @@ class Community {
         }
 
         return false; // Handle errors as needed
+    }
+
+    public function getFilteredData($orderBy, $order) {
+        // Whitelist of allowed column names and order directions
+        $allowedColumns = ['community_name', 'community_eze', 'firstname', 'created_at'];
+        $allowedOrder = ['ASC', 'DESC'];
+
+        if (!in_array($orderBy, $allowedColumns)) {
+            $orderBy = 'community_name'; // Default column
+        }
+        if (!in_array(strtoupper($order), $allowedOrder)) {
+            $order = 'ASC'; // Default order
+        }
+        
+        $query = "
+            SELECT 
+                c.id AS community_id,
+                c.community_name AS name,
+                c.community_eze AS eze,
+                c.lg_comm_head_phone AS chair_phone,
+                c.lg_comm_head_email AS chair_email,
+                lg.id AS lga_id,
+                lg.name AS local_govt_name
+            FROM 
+                communities c
+            LEFT JOIN 
+                local_govts lg 
+            ON 
+                lg.id = c.local_govt_id
+            ORDER BY 
+                c.{$orderBy} {$order}
+                
+        "; // Build the query based on filterType
+        // Implement queries similar to previous examples based on $filterType
+        // Prepare and execute the query
+        $stmt = $this->conn->prepare($query);
+        if($stmt->execute()) 
+        {
+            // Process results
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
     }
 }
